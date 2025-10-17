@@ -8,7 +8,6 @@ import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Collection;
 
@@ -209,7 +208,7 @@ public class FilmControllerTest {
 
     @Test
     void findAll_shouldReturnAllFilms() {
-        Film film1 = filmController.create(validFilm);
+        filmController.create(validFilm);
 
         Film film2 = new Film();
         film2.setName("Second Film");
