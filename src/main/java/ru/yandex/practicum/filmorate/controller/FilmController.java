@@ -22,7 +22,7 @@ public class FilmController {
         final LocalDate cinemaBirthday = LocalDate.of(1895, 12, 28);
 
         @GetMapping
-        public Collection<Film>  findAll(){
+        public Collection<Film> findAll() {
             log.info("Получен запрос на получение всех фильмов. Текущее количество: {}", films.size());
             return films.values();
         }
@@ -83,7 +83,7 @@ public class FilmController {
         }
 
         @PutMapping
-        public Film update (@RequestBody Film newFilm) {
+        public Film update(@RequestBody Film newFilm) {
             log.info("Получен запрос на обновление фильма: {}", newFilm);
 
             if (newFilm.getId() == null) {

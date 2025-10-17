@@ -21,7 +21,7 @@ public class UserController {
     private final Map<Long, User> users = new HashMap<>();
 
     @GetMapping
-    public Collection<User> findAll(){
+    public Collection<User> findAll() {
         log.info("Получен запрос на получение всех пользователей. Текущее количество: {}", users.size());
         return users.values();
     }
@@ -86,7 +86,7 @@ public class UserController {
 
     @PutMapping
     //@Email
-    public User update (@RequestBody User newUser) {
+    public User update(@RequestBody User newUser) {
         log.info("Получен запрос на обновление пользователя: {}", newUser);
 
         if (newUser.getId() == null) {
