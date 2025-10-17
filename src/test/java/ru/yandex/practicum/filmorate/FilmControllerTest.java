@@ -26,7 +26,7 @@ public class FilmControllerTest {
         validFilm.setName("Valid Film");
         validFilm.setDescription("Valid description");
         validFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
-        validFilm.setDuration(Duration.ofMinutes(120));
+        validFilm.setDuration(120);
     }
 
     @AfterEach
@@ -44,7 +44,7 @@ public class FilmControllerTest {
         assertEquals("Valid Film", createdFilm.getName());
         assertEquals("Valid description", createdFilm.getDescription());
         assertEquals(LocalDate.of(2000, 1, 1), createdFilm.getReleaseDate());
-        assertEquals(Duration.ofMinutes(120), createdFilm.getDuration());
+        assertEquals(120, createdFilm.getDuration());
     }
 
     @Test
@@ -53,7 +53,7 @@ public class FilmControllerTest {
         film.setName(null);
         film.setDescription("Valid description");
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(Duration.ofMinutes(120));
+        film.setDuration(120);
 
         ValidationException exception = assertThrows(ValidationException.class,
                 () -> filmController.create(film));
@@ -66,7 +66,7 @@ public class FilmControllerTest {
         film.setName("");
         film.setDescription("Valid description");
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(Duration.ofMinutes(120));
+        film.setDuration(120);
 
         ValidationException exception = assertThrows(ValidationException.class,
                 () -> filmController.create(film));
@@ -79,7 +79,7 @@ public class FilmControllerTest {
         film.setName("   ");
         film.setDescription("Valid description");
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(Duration.ofMinutes(120));
+        film.setDuration(120);
 
         ValidationException exception = assertThrows(ValidationException.class,
                 () -> filmController.create(film));
@@ -95,7 +95,7 @@ public class FilmControllerTest {
                 "Все беды в мире происходят от того, что люди вечно суют нос не в свои дела. " +
                 "И называют они это то братской любовью, то чувством долга."); // > 201 символа
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(Duration.ofMinutes(120));
+        film.setDuration(120);
 
         ValidationException exception = assertThrows(ValidationException.class,
                 () -> filmController.create(film));
@@ -108,7 +108,7 @@ public class FilmControllerTest {
         film.setName("Valid Film");
         film.setDescription("Valid description");
         film.setReleaseDate(LocalDate.of(1895, 12, 27));
-        film.setDuration(Duration.ofMinutes(120));
+        film.setDuration(120);
 
         ValidationException exception = assertThrows(ValidationException.class,
                 () -> filmController.create(film));
@@ -121,7 +121,7 @@ public class FilmControllerTest {
         film.setName("Valid Film");
         film.setDescription("Valid description");
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(Duration.ofSeconds(0));
+        film.setDuration(0);
 
         ValidationException exception = assertThrows(ValidationException.class,
                 () -> filmController.create(film));
@@ -134,7 +134,7 @@ public class FilmControllerTest {
         film.setName("Valid Film");
         film.setDescription("Valid description");
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(Duration.ofSeconds(-1));
+        film.setDuration(-1);
 
         ValidationException exception = assertThrows(ValidationException.class,
                 () -> filmController.create(film));
@@ -151,7 +151,7 @@ public class FilmControllerTest {
         updateFilm.setName("Updated Film");
         updateFilm.setDescription("Updated description");
         updateFilm.setReleaseDate(LocalDate.of(2020, 1, 1));
-        updateFilm.setDuration(Duration.ofMinutes(150));
+        updateFilm.setDuration(150);
 
         Film updatedFilm = filmController.update(updateFilm);
 
@@ -160,7 +160,7 @@ public class FilmControllerTest {
         assertEquals("Updated Film", updatedFilm.getName());
         assertEquals("Updated description", updatedFilm.getDescription());
         assertEquals(LocalDate.of(2020, 1, 1), updatedFilm.getReleaseDate());
-        assertEquals(Duration.ofMinutes(150), updatedFilm.getDuration());
+        assertEquals(150, updatedFilm.getDuration());
     }
 
     @Test
@@ -169,7 +169,7 @@ public class FilmControllerTest {
         film.setName("Valid Film");
         film.setDescription("Valid description");
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(Duration.ofMinutes(120));
+        film.setDuration(120);
 
         ValidationException exception = assertThrows(ValidationException.class,
                 () -> filmController.update(film));
@@ -183,7 +183,7 @@ public class FilmControllerTest {
         film.setName("Valid Film");
         film.setDescription("Valid description");
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(Duration.ofMinutes(120));
+        film.setDuration(120);
 
         NotFoundException exception = assertThrows(NotFoundException.class,
                 () -> filmController.update(film));
@@ -200,7 +200,7 @@ public class FilmControllerTest {
         updateFilm.setName(""); // невалидное имя
         updateFilm.setDescription("Valid description");
         updateFilm.setReleaseDate(LocalDate.of(2000, 1, 1));
-        updateFilm.setDuration(Duration.ofMinutes(120));
+        updateFilm.setDuration(120);
 
         ValidationException exception = assertThrows(ValidationException.class,
                 () -> filmController.update(updateFilm));
@@ -215,7 +215,7 @@ public class FilmControllerTest {
         film2.setName("Second Film");
         film2.setDescription("Second description");
         film2.setReleaseDate(LocalDate.of(2010, 1, 1));
-        film2.setDuration(Duration.ofMinutes(90));
+        film2.setDuration(90);
         filmController.create(film2);
 
         Collection<Film> films = filmController.findAll();
