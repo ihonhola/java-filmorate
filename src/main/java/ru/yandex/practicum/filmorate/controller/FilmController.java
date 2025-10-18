@@ -31,38 +31,8 @@ public class FilmController {
         public Film create(@RequestBody Film film) {
             log.info("Получен запрос на добавление нового фильма: {}", film);
 
-            if (film == null) {
-                String errorMessage = "Тело запроса не может быть пустым";
-                log.warn("Ошибка валидации: {}", errorMessage);
-                throw new ValidationException(errorMessage);
-            }
-
-            if (film.getName() == null || film.getName().isBlank()) {
-                String errorMessage = "Название не может быть пустым";
-                log.warn("Ошибка валидации при добавлении фильма: {}", errorMessage);
-                throw new ValidationException(errorMessage);
-            }
-            if (film.getDescription().length() > 200) {
-                String errorMessage = "Описание не может быть больше 200 символов";
-                log.warn("Ошибка валидации при добавлении фильма: {}", errorMessage);
-                throw new ValidationException(errorMessage);
-            }
-            if (film.getReleaseDate().isBefore(cinemaBirthday)) {
-                String errorMessage = "Фильм не может выйти раньше дня рождения кино";
-                log.warn("Ошибка валидации при добавлении фильма: {}", errorMessage);
-                throw new ValidationException(errorMessage);
-            }
-            if (film.getDuration() <= 0) {
-                String errorMessage = "Продолжительность фильма должна быть больше 0";
-                log.warn("Ошибка валидации при добавлении фильма: {}", errorMessage);
-                throw new ValidationException(errorMessage);
-            }
-
+            validateFilm(film);
             film.setId(getNextId());
-            film.setName(film.getName());
-            film.setDescription(film.getDescription());
-            film.setReleaseDate(film.getReleaseDate());
-            film.setDuration(film.getDuration());
             films.put(film.getId(), film);
 
             log.info("Фильм успешно добавлен с ID: {}. Название: {}, Дата релиза: {}, Длительность: {}",
@@ -70,6 +40,36 @@ public class FilmController {
 
             return film;
         }
+
+    private void validateFilm(Film film) {
+        if (film == null) {
+            String errorMessage = "Тело запроса не может быть пустым";
+            log.warn("Ошибка валидации: {}", errorMessage);
+            throw new ValidationException(errorMessage);
+        }
+
+        if (film.getName() == null || film.getName().isBlank()) {
+            String errorMessage = "Название не может быть пустым";
+            log.warn("Ошибка валидации при добавлении фильма: {}", errorMessage);
+            throw new ValidationException(errorMessage);
+        }
+
+        if (film.getDescription().length() > 200) {
+            String errorMessage = "Описание не может быть больше 200 символов";
+            log.warn("Ошибка валидации при добавлении фильма: {}", errorMessage);
+            throw new ValidationException(errorMessage);
+        }
+
+        if (film.getReleaseDate().isBefore(cinemaBirthday)) {
+            throw new ValidationException("Фильм не может выйти раньше дня рождения кино");
+        }
+
+        if (film.getDuration() <= 0) {
+            String errorMessage = "Продолжительность фильма должна быть больше 0";
+            log.warn("Ошибка валидации при добавлении фильма: {}", errorMessage);
+            throw new ValidationException(errorMessage);
+        }
+    }
 
         private long getNextId() {
             long currentMaxId = films.keySet()
@@ -91,34 +91,18 @@ public class FilmController {
                 log.warn("Ошибка валидации при обновлении фильма: {}", errorMessage);
                 throw new ValidationException(errorMessage);
             }
+
             if (films.containsKey(newFilm.getId())) {
                 Film oldFilm = films.get(newFilm.getId());
                 log.debug("Найден фильм для обновления: {}", oldFilm);
-                if (newFilm.getName() == null || newFilm.getName().isBlank()) {
-                    String errorMessage = "Название не может быть пустым";
-                    log.warn("Ошибка валидации при обновлении фильма с ID {}: {}", newFilm.getId(), errorMessage);
-                    throw new ValidationException(errorMessage);
-                }
-                if (newFilm.getDescription().length() > 200) {
-                    String errorMessage = "Описание не может быть больше 200 символов";
-                    log.warn("Ошибка валидации при обновлении фильма с ID {}: {}", newFilm.getId(), errorMessage);
-                    throw new ValidationException(errorMessage);
-                }
-                if (newFilm.getReleaseDate().isBefore(cinemaBirthday)) {
-                    String errorMessage = "Фильм не может выйти раньше дня рождения кино";
-                    log.warn("Ошибка валидации при обновлении фильма с ID {}: {}", newFilm.getId(), errorMessage);
-                    throw new ValidationException(errorMessage);
-                }
-                if (newFilm.getDuration() <= 0) {
-                    String errorMessage = "Продолжительность фильма должна быть больше 0";
-                    log.warn("Ошибка валидации при обновлении фильма с ID {}: {}", newFilm.getId(), errorMessage);
-                    throw new ValidationException(errorMessage);
-                }
+
+                validateFilm(newFilm);
 
                 oldFilm.setName(newFilm.getName());
                 oldFilm.setDescription(newFilm.getDescription());
                 oldFilm.setReleaseDate(newFilm.getReleaseDate());
                 oldFilm.setDuration(newFilm.getDuration());
+
                 log.info("Фильм с ID {} успешно обновлен. Новые данные: название: {}, дата релиза: {}, длительность: {}",
                         newFilm.getId(), newFilm.getName(), newFilm.getReleaseDate(), newFilm.getDuration());
                 return oldFilm;

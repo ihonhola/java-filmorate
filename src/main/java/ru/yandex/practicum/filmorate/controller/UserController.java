@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.controller;
 
-//import jakarta.validation.constraints.Email;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
@@ -11,7 +10,6 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
 
 @RestController
 @RequestMapping("/users")
@@ -27,10 +25,26 @@ public class UserController {
     }
 
     @PostMapping
-    //@Email
     public User create(@RequestBody User user) {
         log.info("Получен запрос на создание нового пользователя: {}", user);
 
+        validateUser(user);
+
+        if (user.getName() == null || user.getName().isBlank()) {
+            log.debug("Имя пользователя не указано, установлен логин: {}", user.getLogin());
+            user.setName(user.getLogin());
+        }
+
+        user.setId(getNextId());
+        users.put(user.getId(), user);
+
+        log.info("Пользователь успешно создан с ID: {}. Email: {}, Логин: {}",
+                user.getId(), user.getEmail(), user.getLogin());
+
+        return user;
+    }
+
+    private void validateUser(User user) {
         if (user == null) {
             String errorMessage = "Тело запроса не может быть пустым";
             log.warn("Ошибка валидации: {}", errorMessage);
@@ -42,35 +56,18 @@ public class UserController {
             log.warn("Ошибка валидации при создании пользователя: {}", errorMessage);
             throw new ValidationException(errorMessage);
         }
+
         if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
             String errorMessage = "Логин не может быть пустым и содержать пробелы";
             log.warn("Ошибка валидации при создании пользователя: {}", errorMessage);
             throw new ValidationException(errorMessage);
         }
+
         if (user.getBirthday().isAfter(LocalDate.now())) {
             String errorMessage = "Дата рождения не может быть в будущем";
             log.warn("Ошибка валидации при создании пользователя: {}", errorMessage);
             throw new ValidationException(errorMessage);
         }
-
-        user.setId(getNextId());
-        user.setEmail(user.getEmail());
-        user.setLogin(user.getLogin());
-
-        if (user.getName() == null || user.getName().isBlank()) {
-            log.debug("Имя пользователя не указано, установлен логин: {}", user.getLogin());
-            user.setName(user.getLogin());
-        } else {
-            user.setName(user.getName());
-        }
-
-        user.setBirthday(user.getBirthday());
-        users.put(user.getId(), user);
-
-        log.info("Пользователь успешно создан с ID: {}. Email: {}, Логин: {}",
-                user.getId(), user.getEmail(), user.getLogin());
-
-        return user;
     }
 
     private long getNextId() {
@@ -85,7 +82,6 @@ public class UserController {
     }
 
     @PutMapping
-    //@Email
     public User update(@RequestBody User newUser) {
         log.info("Получен запрос на обновление пользователя: {}", newUser);
 
@@ -94,24 +90,12 @@ public class UserController {
             log.warn("Ошибка валидации при обновлении пользователя: {}", errorMessage);
             throw new ValidationException(errorMessage);
         }
+
         if (users.containsKey(newUser.getId())) {
             User oldUser = users.get(newUser.getId());
             log.debug("Найден пользователь для обновления: {}", oldUser);
-            if (newUser.getEmail() == null || newUser.getEmail().isBlank() || !newUser.getEmail().contains("@")) {
-                String errorMessage = "Почта не может быть пустой и должна содержать символ @";
-                log.warn("Ошибка валидации при обновлении пользователя с ID {}: {}", newUser.getId(), errorMessage);
-                throw new ValidationException(errorMessage);
-            }
-            if (newUser.getLogin() == null || newUser.getLogin().isBlank() || newUser.getLogin().contains(" ")) {
-                String errorMessage = "Логин не может быть пустым и содержать пробелы";
-                log.warn("Ошибка валидации при обновлении пользователя с ID {}: {}", newUser.getId(), errorMessage);
-                throw new ValidationException(errorMessage);
-            }
-            if (newUser.getBirthday().isAfter(LocalDate.now())) {
-                String errorMessage = "Дата рождения не может быть в будущем";
-                log.warn("Ошибка валидации при обновлении пользователя с ID {}: {}", newUser.getId(), errorMessage);
-                throw new ValidationException(errorMessage);
-            }
+
+            validateUser(newUser);
 
             oldUser.setEmail(newUser.getEmail());
             oldUser.setLogin(newUser.getLogin());
