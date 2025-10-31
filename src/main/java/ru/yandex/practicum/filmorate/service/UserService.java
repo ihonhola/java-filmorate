@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -79,10 +80,17 @@ public class UserService {
     }
 
     public User update(User user) {
+        if (user.getId() == null) {
+            throw new ValidationException("Id должен быть указан");
+        }
+
+        getUserById(user.getId());
         User updatedUser = userStorage.update(user);
+
         if (updatedUser == null) {
             throw new NotFoundException("Пользователь с id = " + user.getId() + " не найден");
         }
+
         return updatedUser;
     }
 
@@ -91,16 +99,7 @@ public class UserService {
     }
 
     public void delete(Long id) {
-        User user = getUserById(id);
-
-        // Удаляем пользователя из списков друзей всех его друзей
-        for (Long friendId : user.getFriends()) {
-            User friend = userStorage.getById(friendId);
-            if (friend != null) {
-                friend.getFriends().remove(id);
-            }
-        }
-
+        getUserById(id);
         userStorage.delete(id);
         log.info("Пользователь с ID {} успешно удален", id);
     }

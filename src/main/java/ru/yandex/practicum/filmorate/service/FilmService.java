@@ -4,10 +4,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -70,7 +72,7 @@ public class FilmService {
     }
 
     public List<Film> findAll() {
-        return filmStorage.findAll().stream().collect(Collectors.toList());
+        return new ArrayList<>(filmStorage.findAll());
     }
 
     public Film create(Film film) {
@@ -78,7 +80,13 @@ public class FilmService {
     }
 
     public Film update(Film film) {
+        if (film.getId() == null) {
+            throw new ValidationException("Id должен быть указан");
+        }
+
+        getFilmById(film.getId());
         Film updatedFilm = filmStorage.update(film);
+
         if (updatedFilm == null) {
             throw new NotFoundException("Фильм с id = " + film.getId() + " не найден");
         }
@@ -90,6 +98,7 @@ public class FilmService {
     }
 
     public void delete(Long id) {
+        getFilmById(id);
         filmStorage.delete(id);
         log.info("Фильм с ID {} успешно удален", id);
     }

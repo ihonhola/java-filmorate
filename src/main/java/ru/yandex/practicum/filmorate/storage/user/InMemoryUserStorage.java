@@ -77,13 +77,23 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public void delete(Long id) {
-        User removedUser = users.remove(id);
+    public User delete(Long id) {
+        User removedUser = users.get(id);
         if (removedUser != null) {
+            // Сначала очищаем связи у друзей
+            for (Long friendId : removedUser.getFriends()) {
+                User friend = users.get(friendId);
+                if (friend != null) {
+                    friend.getFriends().remove(id);
+                }
+            }
+            // Потом удаляем пользователя
+            users.remove(id);
             log.info("Пользователь с ID {} успешно удален. Логин: {}", id, removedUser.getLogin());
         } else {
             log.warn("Попытка удаления несуществующего пользователя с ID: {}", id);
         }
+        return removedUser;
     }
 
     @Override
