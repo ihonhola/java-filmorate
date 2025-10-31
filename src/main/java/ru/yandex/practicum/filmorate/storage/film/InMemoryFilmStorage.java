@@ -36,22 +36,18 @@ public class InMemoryFilmStorage implements FilmStorage {
     public Film update(Film film) {
         log.info("Получен запрос на обновление фильма: {}", film);
 
-        if (films.containsKey(film.getId())) {
-            Film oldFilm = films.get(film.getId());
-            log.debug("Найден фильм для обновления: {}", oldFilm);
+        Film oldFilm = films.get(film.getId());
+        log.debug("Найден фильм для обновления: {}", oldFilm);
 
-            oldFilm.setName(film.getName());
-            oldFilm.setDescription(film.getDescription());
-            oldFilm.setReleaseDate(film.getReleaseDate());
-            oldFilm.setDuration(film.getDuration());
+        oldFilm.setName(film.getName());
+        oldFilm.setDescription(film.getDescription());
+        oldFilm.setReleaseDate(film.getReleaseDate());
+        oldFilm.setDuration(film.getDuration());
 
-            log.info("Фильм с ID {} успешно обновлен. Новые данные: название: {}, дата релиза: {}, длительность: {}",
-                    film.getId(), film.getName(), film.getReleaseDate(), film.getDuration());
-            return oldFilm;
+        log.info("Фильм с ID {} успешно обновлен. Новые данные: название: {}, дата релиза: {}, длительность: {}",
+                film.getId(), film.getName(), film.getReleaseDate(), film.getDuration());
+        return oldFilm;
         }
-
-        return null;
-    }
 
     @Override
     public Film getById(Long id) {
@@ -66,11 +62,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public void delete(Long id) {
         Film removedFilm = films.remove(id);
-        if (removedFilm != null) {
-            log.info("Фильм с ID {} успешно удален. Название: {}", id, removedFilm.getName());
-        } else {
-            log.warn("Попытка удаления несуществующего фильма с ID: {}", id);
-        }
+        log.info("Фильм с ID {} успешно удален. Название: {}", id, removedFilm.getName());
     }
 
     @Override

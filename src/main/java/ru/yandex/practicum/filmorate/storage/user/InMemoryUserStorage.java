@@ -23,18 +23,10 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public User create(User user) {
         log.info("Получен запрос на создание нового пользователя: {}", user);
-
-        if (user.getName() == null || user.getName().isBlank()) {
-            log.debug("Имя пользователя не указано, установлен логин: {}", user.getLogin());
-            user.setName(user.getLogin());
-        }
-
         user.setId(getNextId());
         users.put(user.getId(), user);
-
         log.info("Пользователь успешно создан с ID: {}. Email: {}, Логин: {}",
                 user.getId(), user.getEmail(), user.getLogin());
-
         return user;
     }
 
@@ -42,28 +34,18 @@ public class InMemoryUserStorage implements UserStorage {
     public User update(User user) {
         log.info("Получен запрос на обновление пользователя: {}", user);
 
-        if (users.containsKey(user.getId())) {
-            User oldUser = users.get(user.getId());
-            log.debug("Найден пользователь для обновления: {}", oldUser);
+        User oldUser = users.get(user.getId());
+        log.debug("Найден пользователь для обновления: {}", oldUser);
 
-            oldUser.setEmail(user.getEmail());
-            oldUser.setLogin(user.getLogin());
+        oldUser.setEmail(user.getEmail());
+        oldUser.setLogin(user.getLogin());
+        oldUser.setName(user.getName());
+        oldUser.setBirthday(user.getBirthday());
 
-            if (user.getName() == null || user.getName().isBlank()) {
-                log.debug("Имя пользователя с ID {} не указано, установлен логин: {}",
-                        user.getId(), user.getLogin());
-                oldUser.setName(user.getLogin());
-            } else {
-                oldUser.setName(user.getName());
-            }
-
-            oldUser.setBirthday(user.getBirthday());
-            log.info("Пользователь с ID {} успешно обновлен. Новые данные: Email: {}, Логин: {}",
+        log.info("Пользователь с ID {} успешно обновлен. Новые данные: Email: {}, Логин: {}",
                     user.getId(), user.getEmail(), user.getLogin());
-            return oldUser;
-        }
 
-        return null;
+        return oldUser;
     }
 
     @Override
@@ -77,23 +59,18 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User delete(Long id) {
+    public void delete(Long id) {
         User removedUser = users.get(id);
-        if (removedUser != null) {
-            // Сначала очищаем связи у друзей
-            for (Long friendId : removedUser.getFriends()) {
-                User friend = users.get(friendId);
-                if (friend != null) {
-                    friend.getFriends().remove(id);
-                }
+        // Сначала очищаем связи у друзей
+        for (Long friendId : removedUser.getFriends()) {
+            User friend = users.get(friendId);
+            if (friend != null) {
+                friend.getFriends().remove(id);
             }
-            // Потом удаляем пользователя
-            users.remove(id);
-            log.info("Пользователь с ID {} успешно удален. Логин: {}", id, removedUser.getLogin());
-        } else {
-            log.warn("Попытка удаления несуществующего пользователя с ID: {}", id);
         }
-        return removedUser;
+        // Потом удаляем пользователя
+        users.remove(id);
+        log.info("Пользователь с ID {} успешно удален. Логин: {}", id, removedUser.getLogin());
     }
 
     @Override

@@ -84,13 +84,11 @@ public class FilmService {
             throw new ValidationException("Id должен быть указан");
         }
 
-        getFilmById(film.getId());
-        Film updatedFilm = filmStorage.update(film);
-
-        if (updatedFilm == null) {
+        if (!filmStorage.existsById(film.getId())) {
             throw new NotFoundException("Фильм с id = " + film.getId() + " не найден");
         }
-        return updatedFilm;
+
+        return filmStorage.update(film);
     }
 
     public Film getById(Long id) {

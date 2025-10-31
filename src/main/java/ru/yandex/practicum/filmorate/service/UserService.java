@@ -76,6 +76,10 @@ public class UserService {
     }
 
     public User create(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            log.debug("Имя пользователя не указано, установлен логин: {}", user.getLogin());
+            user.setName(user.getLogin());
+        }
         return userStorage.create(user);
     }
 
@@ -84,14 +88,17 @@ public class UserService {
             throw new ValidationException("Id должен быть указан");
         }
 
-        getUserById(user.getId());
-        User updatedUser = userStorage.update(user);
-
-        if (updatedUser == null) {
+        if (!userStorage.existsById(user.getId())) {
             throw new NotFoundException("Пользователь с id = " + user.getId() + " не найден");
         }
 
-        return updatedUser;
+        if (user.getName() == null || user.getName().isBlank()) {
+            log.debug("Имя пользователя с ID {} не указано, установлен логин: {}",
+                    user.getId(), user.getLogin());
+            user.setName(user.getLogin());
+        }
+
+        return userStorage.update(user);
     }
 
     public User getById(Long id) {
