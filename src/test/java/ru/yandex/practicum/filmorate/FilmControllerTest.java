@@ -7,6 +7,9 @@ import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -16,11 +19,17 @@ import static org.junit.jupiter.api.Assertions.*;
 public class FilmControllerTest {
 
     private FilmController filmController;
+    private InMemoryFilmStorage filmStorage;
+    private InMemoryUserStorage userStorage;
+    private FilmService filmService;
     private Film validFilm;
 
     @BeforeEach
     void setUp() {
-        filmController = new FilmController();
+        filmStorage = new InMemoryFilmStorage();
+        userStorage = new InMemoryUserStorage();
+        filmService = new FilmService(filmStorage, userStorage);
+        filmController = new FilmController(filmService);
         validFilm = new Film();
         validFilm.setName("Valid Film");
         validFilm.setDescription("Valid description");
@@ -30,7 +39,10 @@ public class FilmControllerTest {
 
     @AfterEach
     void zero() {
+        filmStorage.deleteAll();
         filmController = null;
+        filmService = null;
+        filmStorage = null;
         validFilm = null;
     }
 

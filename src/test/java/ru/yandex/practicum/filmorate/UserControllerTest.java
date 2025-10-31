@@ -7,6 +7,8 @@ import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -17,11 +19,15 @@ import static org.junit.jupiter.api.Assertions.*;
 public class UserControllerTest {
     private User validUser;
     private UserController userController;
+    private InMemoryUserStorage userStorage;
+    private UserService userService;
 
     @BeforeEach
     void setUp() {
         validUser = new User();
-        userController = new UserController();
+        userStorage = new InMemoryUserStorage();
+        userService = new UserService(userStorage);
+        userController = new UserController(userService);
         validUser.setEmail("test@mail.ru");
         validUser.setLogin("validlogin");
         validUser.setName("Test User");
@@ -30,8 +36,11 @@ public class UserControllerTest {
 
     @AfterEach
     void zero() {
+        userStorage.deleteAll();
         userController = null;
         validUser = null;
+        userService = null;
+        userStorage = null;
     }
 
     @Test

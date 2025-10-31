@@ -1,0 +1,116 @@
+package ru.yandex.practicum.filmorate.service;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@Slf4j
+public class UserService {
+
+    private final UserStorage userStorage;
+
+    @Autowired
+    public UserService(UserStorage userStorage) {
+        this.userStorage = userStorage;
+    }
+
+    public User addFriend(Long userId, Long friendId) {
+        User user = getUserById(userId);
+        User friend = getUserById(friendId);
+
+        user.getFriends().add(friendId);
+        friend.getFriends().add(userId);
+
+        log.info("Пользователь с ID {} добавил в друзья пользователя с ID {}", userId, friendId);
+        return user;
+    }
+
+    public User removeFriend(Long userId, Long friendId) {
+        User user = getUserById(userId);
+        User friend = getUserById(friendId);
+
+        user.getFriends().remove(friendId);
+        friend.getFriends().remove(userId);
+
+        log.info("Пользователь с ID {} удалил из друзей пользователя с ID {}", userId, friendId);
+        return user;
+    }
+
+    public List<User> getFriends(Long userId) {
+        User user = getUserById(userId);
+
+        return user.getFriends().stream()
+                .map(this::getUserById)
+                .collect(Collectors.toList());
+    }
+
+    public List<User> getCommonFriends(Long userId, Long otherUserId) {
+        User user = getUserById(userId);
+        User otherUser = getUserById(otherUserId);
+
+        return user.getFriends().stream()
+                .filter(friendId -> otherUser.getFriends().contains(friendId))
+                .map(this::getUserById)
+                .collect(Collectors.toList());
+    }
+
+    private User getUserById(Long userId) {
+        User user = userStorage.getById(userId);
+        if (user == null) {
+            throw new NotFoundException("Пользователь с id = " + userId + " не найден");
+        }
+        return user;
+    }
+
+    public List<User> findAll() {
+        return new ArrayList<>(userStorage.findAll());
+    }
+
+    public User create(User user) {
+        return userStorage.create(user);
+    }
+
+    public User update(User user) {
+        User updatedUser = userStorage.update(user);
+        if (updatedUser == null) {
+            throw new NotFoundException("Пользователь с id = " + user.getId() + " не найден");
+        }
+        return updatedUser;
+    }
+
+    public User getById(Long id) {
+        return getUserById(id);
+    }
+
+    public void delete(Long id) {
+        User user = getUserById(id);
+
+        // Удаляем пользователя из списков друзей всех его друзей
+        for (Long friendId : user.getFriends()) {
+            User friend = userStorage.getById(friendId);
+            if (friend != null) {
+                friend.getFriends().remove(id);
+            }
+        }
+
+        userStorage.delete(id);
+        log.info("Пользователь с ID {} успешно удален", id);
+    }
+
+    public void deleteAll() {
+        userStorage.deleteAll();
+        log.info("Все пользователи успешно удалены");
+    }
+
+    public boolean existsById(Long id) {
+        return userStorage.existsById(id);
+    }
+}
