@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MpaRating;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -108,5 +110,26 @@ public class FilmService {
 
     public boolean existsById(Long id) {
         return filmStorage.existsById(id);
+    }
+
+    public Film addGenre(Long filmId, Genre genre) {
+        Film film = getFilmById(filmId);
+        film.getGenres().add(genre);
+        log.info("Добавлен жанр {} фильму с ID {}", genre.getName(), filmId);
+        return film;
+    }
+
+    public Film removeGenre(Long filmId, Genre genre) {
+        Film film = getFilmById(filmId);
+        film.getGenres().remove(genre);
+        log.info("Удален жанр {} у фильма с ID {}", genre.getName(), filmId);
+        return film;
+    }
+
+    public Film setMpa(Long filmId, MpaRating mpa) {
+        Film film = getFilmById(filmId);
+        film.setMpa(mpa);
+        log.info("Установлен рейтинг {} для фильма с ID {}", mpa.getCode(), filmId);
+        return film;
     }
 }
