@@ -62,7 +62,7 @@ public class InMemoryUserStorage implements UserStorage {
     public void delete(Long id) {
         User removedUser = users.get(id);
         // Сначала очищаем связи у друзей
-        for (Long friendId : removedUser.getFriends()) {
+        for (Long friendId : removedUser.getFriends().keySet()) {
             User friend = users.get(friendId);
             if (friend != null) {
                 friend.getFriends().remove(id);
