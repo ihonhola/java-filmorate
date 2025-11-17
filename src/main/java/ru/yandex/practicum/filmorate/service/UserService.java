@@ -5,11 +5,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,7 +25,7 @@ public class UserService {
         this.userStorage = userStorage;
     }
 
-    public User addFriend(Long userId, Long friendId) {
+    /*public User addFriend(Long userId, Long friendId) {
         User user = getUserById(userId);
         User friend = getUserById(friendId);
 
@@ -31,6 +33,24 @@ public class UserService {
         friend.getFriends().add(userId);
 
         log.info("Пользователь с ID {} добавил в друзья пользователя с ID {}", userId, friendId);
+        return user;
+    } */
+
+    public User addFriend(Long userId, Long friendId) {
+        User user = getUserById(userId);
+        User friend = getUserById(friendId);
+
+        // Если дружба уже существует
+        if (user.getFriends().containsKey(friendId)) {
+            throw new ValidationException("Пользователь уже в друзьях");
+        }
+
+        // Добавляем неподтвержденную дружбу
+        user.getFriends().put(friendId, FriendshipStatus.PENDING);
+        // У друга тоже добавляем неподтвержденную дружбу
+        friend.getFriends().put(userId, FriendshipStatus.PENDING);
+
+        log.info("Пользователь с ID {} отправил запрос на дружбу пользователю с ID {}", userId, friendId);
         return user;
     }
 
@@ -48,7 +68,7 @@ public class UserService {
     public List<User> getFriends(Long userId) {
         User user = getUserById(userId);
 
-        return user.getFriends().stream()
+        return user.getFriends().keySet().stream()
                 .map(this::getUserById)
                 .collect(Collectors.toList());
     }
@@ -57,8 +77,8 @@ public class UserService {
         User user = getUserById(userId);
         User otherUser = getUserById(otherUserId);
 
-        return user.getFriends().stream()
-                .filter(friendId -> otherUser.getFriends().contains(friendId))
+        return user.getFriends().keySet().stream()
+                .filter(friendId -> otherUser.getFriends().containsKey(friendId))
                 .map(this::getUserById)
                 .collect(Collectors.toList());
     }
@@ -118,5 +138,33 @@ public class UserService {
 
     public boolean existsById(Long id) {
         return userStorage.existsById(id);
+    }
+
+    public User confirmFriend(Long userId, Long friendId) {
+        User user = getUserById(userId);
+        User friend = getUserById(friendId);
+
+        // Проверяем, что есть запрос на дружбу
+        if (!user.getFriends().containsKey(friendId) ||
+                user.getFriends().get(friendId) != FriendshipStatus.PENDING) {
+            throw new ValidationException("Запрос на дружбу не найден");
+        }
+
+        // Подтверждаем дружбу у обоих пользователей
+        user.getFriends().put(friendId, FriendshipStatus.CONFIRMED);
+        friend.getFriends().put(userId, FriendshipStatus.CONFIRMED);
+
+        log.info("Пользователь с ID {} подтвердил дружбу с пользователем с ID {}", userId, friendId);
+        return user;
+    }
+
+    public List<User> getFriendRequests(Long userId) {
+        User user = getUserById(userId);
+
+        return user.getFriends().entrySet().stream()
+                .filter(entry -> entry.getValue() == FriendshipStatus.PENDING)
+                .map(Map.Entry::getKey)
+                .map(this::getUserById)
+                .collect(Collectors.toList());
     }
 }
