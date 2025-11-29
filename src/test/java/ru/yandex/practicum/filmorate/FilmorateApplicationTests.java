@@ -4,7 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
@@ -13,14 +14,15 @@ import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.MpaDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-
-@JdbcTest
+@SpringBootTest
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class FilmorateApplicationTests {
@@ -28,16 +30,16 @@ class FilmorateApplicationTests {
     private final FilmDbStorage filmStorage;
     private final GenreDbStorage genreStorage;
     private final MpaDbStorage mpaStorage;
+    private final JdbcTemplate jdbcTemplate;
 
     @Test
     public void testFindUserById() {
-
         Optional<User> userOptional = Optional.ofNullable(userStorage.getById(1L));
 
         assertThat(userOptional)
                 .isPresent()
                 .hasValueSatisfying(user ->
-                        assertThat(user).hasFieldOrPropertyWithValue("id", 1)
+                        assertThat(user).hasFieldOrPropertyWithValue("id", 1L)
                 );
     }
 
@@ -85,7 +87,7 @@ class FilmorateApplicationTests {
         newUser.setEmail("newuser@example.com");
         newUser.setLogin("newlogin");
         newUser.setName("New User");
-        newUser.setBirthday(java.time.LocalDate.of(2000, 1, 1));
+        newUser.setBirthday(LocalDate.of(2000, 1, 1));
 
         User createdUser = userStorage.create(newUser);
         Long newUserId = createdUser.getId();
@@ -102,6 +104,9 @@ class FilmorateApplicationTests {
         // Проверяем обновление
         assertThat(updatedUser.getEmail()).isEqualTo("updated@example.com");
         assertThat(updatedUser.getName()).isEqualTo("Updated User");
+
+        // Очищаем созданные данные
+        userStorage.delete(newUserId);
     }
 
     @Test
@@ -142,7 +147,7 @@ class FilmorateApplicationTests {
         Film newFilm = new Film();
         newFilm.setName("New Film");
         newFilm.setDescription("New Film Description");
-        newFilm.setReleaseDate(java.time.LocalDate.of(2023, 1, 1));
+        newFilm.setReleaseDate(LocalDate.of(2023, 1, 1));
         newFilm.setDuration(100);
 
         Film createdFilm = filmStorage.create(newFilm);
@@ -160,6 +165,9 @@ class FilmorateApplicationTests {
         // Проверяем обновление
         assertThat(updatedFilm.getName()).isEqualTo("Updated Film");
         assertThat(updatedFilm.getDuration()).isEqualTo(120);
+
+        // Очищаем созданные данные
+        filmStorage.delete(newFilmId);
     }
 
     @Test
@@ -233,10 +241,10 @@ class FilmorateApplicationTests {
 
     @Test
     void testGetMpaById() {
-        MpaRating mpa = mpaStorage.findById(1L).orElse(null);
+        Optional<MpaRating> mpa = mpaStorage.findById(1L);
 
-        assertThat(mpa).isNotNull();
-        assertThat(mpa.getId()).isEqualTo(1L);
-        assertThat(mpa.getName()).isEqualTo("G");
+        assertThat(mpa).isPresent();
+        assertThat(mpa.get().getId()).isEqualTo(1L);
+        assertThat(mpa.get().getName()).isEqualTo("G");
     }
 }
