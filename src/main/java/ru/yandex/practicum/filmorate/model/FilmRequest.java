@@ -1,25 +1,16 @@
 package ru.yandex.practicum.filmorate.model;
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 import jakarta.validation.constraints.NotBlank;
-
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Film.
- */
-
 @Data
-public class Film {
-    private Long id;
-
+public class FilmRequest {
     @NotBlank(message = "Название не может быть пустым")
-    @NotNull(message = "Название не может быть пустым")
     private String name;
 
     @Size(max = 200, message = "Описание не может быть больше 200 символов")
@@ -30,9 +21,6 @@ public class Film {
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
     private Integer duration;
 
-    private Set<Long> likes = new HashSet<>();
-
-    private Set<Long> genres = new HashSet<>();
-
-    private Long mpa;
+    private MpaRequest mpa; // Используем MpaRequest вместо MpaRating
+    private Set<GenreRequest> genres = new HashSet<>(); // Используем GenreRequest вместо Genre
 }

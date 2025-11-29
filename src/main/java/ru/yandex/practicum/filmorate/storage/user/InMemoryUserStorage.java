@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -9,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
+@Qualifier("inMemoryUserStorage")
 @Slf4j
 public class InMemoryUserStorage implements UserStorage {
     private final Map<Long, User> users = new HashMap<>();
@@ -62,7 +64,7 @@ public class InMemoryUserStorage implements UserStorage {
     public void delete(Long id) {
         User removedUser = users.get(id);
         // Сначала очищаем связи у друзей
-        for (Long friendId : removedUser.getFriends().keySet()) {
+        for (Long friendId : removedUser.getFriends()) {
             User friend = users.get(friendId);
             if (friend != null) {
                 friend.getFriends().remove(id);

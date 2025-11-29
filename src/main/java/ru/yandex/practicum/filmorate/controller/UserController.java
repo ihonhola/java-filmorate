@@ -113,15 +113,15 @@ public class UserController {
         return userService.getCommonFriends(id, otherId);
     }
 
-    @PutMapping("/{id}/friends/{friendId}/confirm")
+    /*@PutMapping("/{id}/friends/{friendId}/confirm")
     public User confirmFriend(@PathVariable Long id, @PathVariable Long friendId) {
         log.info("Получен запрос на подтверждение дружбы: пользователь {} подтверждает дружбу с {}", id, friendId);
         return userService.confirmFriend(id, friendId);
-    }
+    }*/
 
-    @GetMapping("/{id}/friends/requests")
+    /*@GetMapping("/{id}/friends/requests")
     public List<User> getFriendRequests(@PathVariable Long id) {
         log.info("Получен запрос на получение заявок в друзья пользователя {}", id);
         return userService.getFriendRequests(id);
-    }
+    }*/
 }

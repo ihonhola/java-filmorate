@@ -28,7 +28,7 @@ public class FilmControllerTest {
     void setUp() {
         filmStorage = new InMemoryFilmStorage();
         userStorage = new InMemoryUserStorage();
-        filmService = new FilmService(filmStorage, userStorage);
+        filmService = new FilmService(filmStorage, userStorage, null);
         filmController = new FilmController(filmService);
         validFilm = new Film();
         validFilm.setName("Valid Film");
