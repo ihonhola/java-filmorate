@@ -8,7 +8,6 @@ import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,13 +18,10 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserStorage userStorage;
-    private final JdbcTemplate jdbcTemplate;
 
     @Autowired
-    public UserService(@Qualifier("userDbStorage") UserStorage userStorage,
-                       JdbcTemplate jdbcTemplate) {
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
         this.userStorage = userStorage;
-        this.jdbcTemplate = jdbcTemplate;
     }
 
     public User addFriend(Long userId, Long friendId) {
@@ -37,12 +33,11 @@ public class UserService {
             throw new ValidationException("Пользователь уже в друзьях");
         }
 
+        // Вызываем метод хранилища для добавления дружбы
+        userStorage.addFriend(userId, friendId);
+
         // Добавляем неподтвержденную дружбу
         user.getFriends().add(friendId);
-
-        // Сохраняем в БД
-        String sql = "INSERT INTO friendships (user_id, friend_id, status) VALUES (?, ?, 'CONFIRMED')";
-        jdbcTemplate.update(sql, userId, friendId);
 
         log.info("Пользователь с ID {} отправил запрос на дружбу пользователю с ID {}", userId, friendId);
         return user;
@@ -53,12 +48,11 @@ public class UserService {
         User user = getUserById(userId);
         getUserById(friendId);
 
+        // Удаляем дружбу через хранилище
+        userStorage.removeFriend(userId, friendId);
+
         // Удаляем из коллекции
         user.getFriends().remove(friendId);
-
-        // Удаляем из БД
-        String sql = "DELETE FROM friendships WHERE user_id = ? AND friend_id = ?";
-        jdbcTemplate.update(sql, userId, friendId);
 
         log.info("Удаление дружбы между пользователями {} и {} выполнено", userId, friendId);
         return user;
@@ -67,19 +61,14 @@ public class UserService {
     public List<User> getFriends(Long userId) {
         User user = getUserById(userId);
 
-        return user.getFriends().stream()
-                .map(this::getUserById)
-                .collect(Collectors.toList());
+        return userStorage.getFriends(userId);
     }
 
     public List<User> getCommonFriends(Long userId, Long otherUserId) {
         User user = getUserById(userId);
         User otherUser = getUserById(otherUserId);
 
-        return user.getFriends().stream()
-                .filter(friendId -> otherUser.getFriends().contains(friendId))
-                .map(this::getUserById)
-                .collect(Collectors.toList());
+        return userStorage.getCommonFriends(userId, otherUserId);
     }
 
     private User getUserById(Long userId) {

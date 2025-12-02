@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
@@ -20,7 +21,7 @@ import java.util.*;
 public class UserDbStorage implements UserStorage {
 
     private final JdbcTemplate jdbcTemplate;
-    private final UserRowMapper userRowMapper;
+    private final RowMapper userRowMapper;
 
     @Autowired
     public UserDbStorage(JdbcTemplate jdbcTemplate, UserRowMapper userRowMapper) {
@@ -105,5 +106,56 @@ public class UserDbStorage implements UserStorage {
         log.info("Все пользователи удалены из БД");
     }
 
+    @Override
+    public void addFriend(Long userId, Long friendId) {
+        // Проверяем, не существует ли уже дружба
+        String checkSql = "SELECT COUNT(*) FROM friendships WHERE user_id = ? AND friend_id = ?";
+        Integer existing = jdbcTemplate.queryForObject(checkSql, Integer.class, userId, friendId);
 
+        if (existing == null || existing == 0) {
+            String sql = "INSERT INTO friendships (user_id, friend_id, status) VALUES (?, ?, 'CONFIRMED')";
+            jdbcTemplate.update(sql, userId, friendId);
+            log.info("Дружба добавлена: user_id={}, friend_id={}", userId, friendId);
+        } else {
+            log.info("Дружба уже существует: user_id={}, friend_id={}", userId, friendId);
+        }
+    }
+
+    @Override
+    public void removeFriend(Long userId, Long friendId) {
+        String sql = "DELETE FROM friendships WHERE user_id = ? AND friend_id = ?";
+        int deletedRows = jdbcTemplate.update(sql, userId, friendId);
+
+        if (deletedRows > 0) {
+            log.info("Дружба удалена: user_id={}, friend_id={}", userId, friendId);
+        } else {
+            log.warn("Дружба не найдена для удаления: user_id={}, friend_id={}", userId, friendId);
+        }
+    }
+
+    @Override
+    public List<User> getFriends(Long userId) {
+        String sql = "SELECT u.* FROM users u " +
+                "JOIN friendships f ON u.user_id = f.friend_id " +
+                "WHERE f.user_id = ? AND f.status = 'CONFIRMED'";
+
+        return jdbcTemplate.query(sql, userRowMapper, userId);
+    }
+
+    @Override
+    public List<User> getCommonFriends(Long userId, Long otherUserId) {
+        String sql = "SELECT u.* FROM users u " +
+                "JOIN friendships f1 ON u.user_id = f1.friend_id " +
+                "JOIN friendships f2 ON u.user_id = f2.friend_id " +
+                "WHERE f1.user_id = ? AND f2.user_id = ? " +
+                "AND f1.status = 'CONFIRMED' AND f2.status = 'CONFIRMED'";
+
+        return jdbcTemplate.query(sql, userRowMapper, userId, otherUserId);
+    }
+
+    private Set<Long> loadFriends(Long userId) {
+        String sql = "SELECT friend_id FROM friendships WHERE user_id = ? AND status = 'CONFIRMED'";
+        return new HashSet<>(jdbcTemplate.query(sql,
+                (rs, rowNum) -> rs.getLong("friend_id"), userId));
+    }
 }
