@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.model;
+package ru.yandex.practicum.filmorate.dto;
 
 import lombok.Data;
 import jakarta.validation.constraints.NotBlank;
@@ -10,6 +10,8 @@ import java.util.Set;
 
 @Data
 public class FilmRequest {
+    private Long id;
+
     @NotBlank(message = "Название не может быть пустым")
     private String name;
 

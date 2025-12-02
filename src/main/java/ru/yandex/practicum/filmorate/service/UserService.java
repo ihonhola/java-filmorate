@@ -27,20 +27,6 @@ public class UserService {
         this.userStorage = userStorage;
         this.jdbcTemplate = jdbcTemplate;
     }
-    /*public UserService(UserStorage userStorage) {
-        this.userStorage = userStorage;
-    }*/
-
-    /*public User addFriend(Long userId, Long friendId) {
-        User user = getUserById(userId);
-        User friend = getUserById(friendId);
-
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
-
-        log.info("Пользователь с ID {} добавил в друзья пользователя с ID {}", userId, friendId);
-        return user;
-    } */
 
     public User addFriend(Long userId, Long friendId) {
         User user = getUserById(userId);
@@ -52,9 +38,6 @@ public class UserService {
         }
 
         // Добавляем неподтвержденную дружбу
-        //user.getFriends().put(friendId, FriendshipStatus.PENDING);
-        // У друга тоже добавляем неподтвержденную дружбу
-        // friend.getFriends().put(userId, FriendshipStatus.PENDING);
         user.getFriends().add(friendId);
 
         // Сохраняем в БД
@@ -155,31 +138,4 @@ public class UserService {
     public boolean existsById(Long id) {
         return userStorage.existsById(id);
     }
-
-    /*public List<User> getFriendRequests(Long userId) {
-        User user = getUserById(userId);
-
-        return user.getFriends().entrySet().stream()
-                .filter(entry -> entry.getValue() == FriendshipStatus.PENDING)
-                .map(Map.Entry::getKey)
-                .map(this::getUserById)
-                .collect(Collectors.toList());
-    }*/
-
-    /*public User confirmFriend(Long userId, Long friendId) {
-        User user = getUserById(userId);
-        User friend = getUserById(friendId);
-
-        // Обновляем статус дружбы в БД
-        String sql = "UPDATE friendships SET status = ? WHERE user_id = ? AND friend_id = ?";
-        jdbcTemplate.update(sql, FriendshipStatus.CONFIRMED.toString(), userId, friendId);
-        jdbcTemplate.update(sql, FriendshipStatus.CONFIRMED.toString(), friendId, userId);
-
-        // Обновляем объекты
-        user.getFriends().put(friendId, FriendshipStatus.CONFIRMED);
-        friend.getFriends().put(userId, FriendshipStatus.CONFIRMED);
-
-        log.info("Пользователь с ID {} подтвердил дружбу с пользователем с ID {}", userId, friendId);
-        return user;
-    }*/
 }

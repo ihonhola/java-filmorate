@@ -4,10 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.mappers.UserRowMapper;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.sql.*;
@@ -20,26 +20,13 @@ import java.util.*;
 public class UserDbStorage implements UserStorage {
 
     private final JdbcTemplate jdbcTemplate;
+    private final UserRowMapper userRowMapper;
 
     @Autowired
-    public UserDbStorage(JdbcTemplate jdbcTemplate) {
+    public UserDbStorage(JdbcTemplate jdbcTemplate, UserRowMapper userRowMapper) {
         this.jdbcTemplate = jdbcTemplate;
+        this.userRowMapper = userRowMapper;
     }
-
-    private final RowMapper<User> userRowMapper = (rs, rowNum) -> {
-        User user = new User();
-        user.setId(rs.getLong("user_id"));
-        user.setEmail(rs.getString("email"));
-        user.setLogin(rs.getString("login"));
-        user.setName(rs.getString("name"));
-        user.setBirthday(rs.getDate("birthday").toLocalDate());
-
-        // Загружаем друзей
-        Set<Long> friends = loadFriends(user.getId());
-        user.setFriends(friends);
-
-        return user;
-    };
 
     @Override
     public Collection<User> findAll() {
@@ -118,22 +105,5 @@ public class UserDbStorage implements UserStorage {
         log.info("Все пользователи удалены из БД");
     }
 
-    /*private Map<Long, FriendshipStatus> loadFriends(Long userId) {
-        String sql = "SELECT friend_id, status FROM friendships WHERE user_id = ?";
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, userId);
 
-        Map<Long, FriendshipStatus> friends = new HashMap<>();
-        for (Map<String, Object> row : rows) {
-            Long friendId = ((Number) row.get("friend_id")).longValue();
-            FriendshipStatus status = FriendshipStatus.valueOf((String) row.get("status"));
-            friends.put(friendId, status);
-        }
-
-        return friends;
-    }*/
-    private Set<Long> loadFriends(Long userId) {
-        String sql = "SELECT friend_id FROM friendships WHERE user_id = ? AND status = 'CONFIRMED'";
-        return new HashSet<>(jdbcTemplate.query(sql, (rs, rowNum) ->
-                rs.getLong("friend_id"), userId));
-    }
 }

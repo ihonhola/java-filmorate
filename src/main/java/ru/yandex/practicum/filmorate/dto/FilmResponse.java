@@ -1,6 +1,7 @@
-package ru.yandex.practicum.filmorate.model;
+package ru.yandex.practicum.filmorate.dto;
 
 import lombok.Data;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -18,21 +19,3 @@ public class FilmResponse {
     private List<GenreResponse> genres = new ArrayList<>();
     private MpaResponse mpa;
 }
-
-/*@Data
-class GenreObject {
-    private Long id;
-
-    public GenreObject(Long id) {
-        this.id = id;
-    }
-}
-
-@Data
-class MpaObject {
-    private Long id;
-
-    public MpaObject(Long id) {
-        this.id = id;
-    }
-} */

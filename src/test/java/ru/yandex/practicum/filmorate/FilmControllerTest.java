@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.FilmResponse;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
@@ -29,8 +28,8 @@ public class FilmControllerTest {
     void setUp() {
         filmStorage = new InMemoryFilmStorage();
         userStorage = new InMemoryUserStorage();
-        filmService = new FilmService(filmStorage, userStorage, null);
-        filmController = new FilmController(filmService);
+        filmService = new FilmService(filmStorage, userStorage, null, null);
+        filmController = new FilmController(filmService, null);
         validFilm = new Film();
         validFilm.setName("Valid Film");
         validFilm.setDescription("Valid description");
@@ -61,7 +60,7 @@ public class FilmControllerTest {
 
     @Test
     void createFilm_withValidData_shouldSucceed() {
-        FilmResponse createdFilm = filmController.create(filmToMap(validFilm));
+        Film createdFilm = filmController.create(validFilm);
 
         assertNotNull(createdFilm);
         assertNotNull(createdFilm.getId());
@@ -80,7 +79,7 @@ public class FilmControllerTest {
         film.setDuration(120);
 
         ValidationException exception = assertThrows(ValidationException.class,
-                () -> filmController.create(filmToMap(film)));
+                () -> filmController.create(film));
         assertEquals("Название не может быть пустым", exception.getMessage());
     }
 
@@ -93,7 +92,7 @@ public class FilmControllerTest {
         film.setDuration(120);
 
         ValidationException exception = assertThrows(ValidationException.class,
-                () -> filmController.create(filmToMap(film)));
+                () -> filmController.create(film));
         assertEquals("Название не может быть пустым", exception.getMessage());
     }
 
@@ -106,7 +105,7 @@ public class FilmControllerTest {
         film.setDuration(120);
 
         ValidationException exception = assertThrows(ValidationException.class,
-                () -> filmController.create(filmToMap(film)));
+                () -> filmController.create(film));
         assertEquals("Название не может быть пустым", exception.getMessage());
     }
 
@@ -122,7 +121,7 @@ public class FilmControllerTest {
         film.setDuration(120);
 
         ValidationException exception = assertThrows(ValidationException.class,
-                () -> filmController.create(filmToMap(film)));
+                () -> filmController.create(film));
         assertEquals("Описание не может быть больше 200 символов", exception.getMessage());
     }
 
@@ -135,7 +134,7 @@ public class FilmControllerTest {
         film.setDuration(120);
 
         ValidationException exception = assertThrows(ValidationException.class,
-                () -> filmController.create(filmToMap(film)));
+                () -> filmController.create(film));
         assertEquals("Фильм не может выйти раньше дня рождения кино", exception.getMessage());
     }
 
@@ -148,7 +147,7 @@ public class FilmControllerTest {
         film.setDuration(0);
 
         ValidationException exception = assertThrows(ValidationException.class,
-                () -> filmController.create(filmToMap(film)));
+                () -> filmController.create(film));
         assertEquals("Продолжительность фильма должна быть больше 0", exception.getMessage());
     }
 
@@ -161,13 +160,13 @@ public class FilmControllerTest {
         film.setDuration(-1);
 
         ValidationException exception = assertThrows(ValidationException.class,
-                () -> filmController.create(filmToMap(film)));
+                () -> filmController.create(film));
         assertEquals("Продолжительность фильма должна быть больше 0", exception.getMessage());
     }
 
     @Test
     void updateFilm_withValidData_shouldSucceed() {
-        FilmResponse createdFilm = filmController.create(filmToMap(validFilm));
+        Film createdFilm = filmController.create(validFilm);
         Long filmId = createdFilm.getId();
 
         Film updateFilm = new Film();
@@ -177,7 +176,7 @@ public class FilmControllerTest {
         updateFilm.setReleaseDate(LocalDate.of(2020, 1, 1));
         updateFilm.setDuration(150);
 
-        FilmResponse updatedFilm = filmController.update(filmToMap(updateFilm));
+        Film updatedFilm = filmController.update(updateFilm);
 
         assertNotNull(updatedFilm);
         assertEquals(filmId, updatedFilm.getId());
@@ -196,27 +195,27 @@ public class FilmControllerTest {
         film.setDuration(120);
 
         ValidationException exception = assertThrows(ValidationException.class,
-                () -> filmController.update(filmToMap(film)));
+                () -> filmController.update(film));
         assertEquals("Id должен быть указан", exception.getMessage());
     }
 
     @Test
     void updateFilm_nonExistentFilm_shouldThrowNotFoundException() {
-        Map<String, Object> filmMap = new HashMap<>();
-        filmMap.put("id", 999L);
-        filmMap.put("name", "Valid Film");
-        filmMap.put("description", "Valid description");
-        filmMap.put("releaseDate", LocalDate.of(2000, 1, 1));
-        filmMap.put("duration", 120);
+        Film film = new Film();
+        film.setId(999L);
+        film.setName("Valid Film");
+        film.setDescription("Valid description");
+        film.setReleaseDate(LocalDate.of(2000, 1, 1));
+        film.setDuration(120);
 
         NotFoundException exception = assertThrows(NotFoundException.class,
-                () -> filmController.update(filmMap));
+                () -> filmController.update(film));
         assertEquals("Фильм с id = 999 не найден", exception.getMessage());
     }
 
     @Test
     void updateFilm_withInvalidData_shouldThrowValidationException() {
-        FilmResponse createdFilm = filmController.create(filmToMap(validFilm));
+        Film createdFilm = filmController.create(validFilm);
         Long filmId = createdFilm.getId();
 
         Film updateFilm = new Film();
@@ -227,33 +226,26 @@ public class FilmControllerTest {
         updateFilm.setDuration(120);
 
         ValidationException exception = assertThrows(ValidationException.class,
-                () -> filmController.update(filmToMap(updateFilm)));
+                () -> filmController.update(updateFilm));
         assertEquals("Название не может быть пустым", exception.getMessage());
     }
 
     @Test
     void findAll_shouldReturnAllFilms() {
-        filmController.create(filmToMap(validFilm));
+        filmController.create(validFilm);
 
         Film film2 = new Film();
         film2.setName("Second Film");
         film2.setDescription("Second description");
         film2.setReleaseDate(LocalDate.of(2010, 1, 1));
         film2.setDuration(90);
-        filmController.create(filmToMap(film2));
+        filmController.create(film2);
 
-        List<FilmResponse> films = filmController.findAll();
+        List<Film> films = filmController.findAll();
 
         assertNotNull(films);
         assertEquals(2, films.size());
         assertTrue(films.stream().anyMatch(f -> f.getName().equals("Valid Film")));
         assertTrue(films.stream().anyMatch(f -> f.getName().equals("Second Film")));
     }
-
-    /*@Test
-    void createFilm_withNullFilm_shouldThrowException() {
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> filmController.create(null));
-        assertNotNull(exception);
-    }*/
 }

@@ -44,10 +44,6 @@ class FilmorateApplicationTests {
     }
 
     @Test
-    void contextLoads() {
-    }
-
-    @Test
     void testGetExistingUser() {
         User foundUser = userStorage.getById(1L);
 

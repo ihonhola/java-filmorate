@@ -6,6 +6,8 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Genre;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,10 +17,14 @@ public class GenreDbStorage {
 
     private final JdbcTemplate jdbcTemplate;
 
-    private final RowMapper<Genre> genreRowMapper = (rs, rowNum) -> {
-        Long id = rs.getLong("genre_id");
-        String name = rs.getString("name");
-        return Genre.fromId(id);
+    private final RowMapper<Genre> genreRowMapper = new RowMapper<Genre>() {
+        @Override
+        public Genre mapRow(ResultSet rs, int rowNum) throws SQLException {
+            Genre genre = new Genre();
+            genre.setId(rs.getLong("genre_id"));
+            genre.setName(rs.getString("name"));
+            return genre;
+        }
     };
 
     public List<Genre> findAll() {

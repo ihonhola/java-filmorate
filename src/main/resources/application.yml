@@ -5,7 +5,6 @@ spring:
       #schema-locations: classpath:schema.sql
       #data-locations: classpath:data.sql
   datasource:
-    # в jdbc-url укажите, что данные нужно сохранять в файл
     url: jdbc:h2:file:./db/filmorate
     driver-class-name: org.h2.Driver
     username: sa
