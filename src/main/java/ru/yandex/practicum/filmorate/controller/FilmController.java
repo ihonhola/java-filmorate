@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.mappers.FilmMapper;
 
 import java.util.List;
 
@@ -15,12 +14,10 @@ import java.util.List;
 public class FilmController {
 
     private final FilmService filmService;
-    private final FilmMapper filmMapper;
 
     @Autowired
-    public FilmController(FilmService filmService, FilmMapper filmMapper) {
+    public FilmController(FilmService filmService) {
         this.filmService = filmService;
-        this.filmMapper = filmMapper;
     }
 
     @GetMapping
@@ -36,13 +33,13 @@ public class FilmController {
     }
 
     @PostMapping
-    public Film create(@RequestBody Film film) { // Принимаем Film напрямую
+    public Film create(@RequestBody Film film) {
         log.info("Получен запрос на добавление нового фильма: {}", film);
         return filmService.create(film);
     }
 
     @PutMapping
-    public Film update(@RequestBody Film film) { // Принимаем Film напрямую
+    public Film update(@RequestBody Film film) {
         log.info("Получен запрос на обновление фильма: {}", film);
         return filmService.update(film);
     }
@@ -68,16 +65,14 @@ public class FilmController {
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public Film addLike(@PathVariable Long id, @PathVariable Long userId) {
+    public void addLike(@PathVariable Long id, @PathVariable Long userId) {
         log.info("Получен запрос на добавление лайка фильму {} от пользователя {}", id, userId);
         filmService.addLike(id, userId);
-        return filmService.getById(id);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public Film removeLike(@PathVariable Long id, @PathVariable Long userId) {
+    public void removeLike(@PathVariable Long id, @PathVariable Long userId) {
         log.info("Получен запрос на удаление лайка с фильма {} от пользователя {}", id, userId);
         filmService.removeLike(id, userId);
-        return filmService.getById(id);
     }
 }

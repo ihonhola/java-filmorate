@@ -8,8 +8,6 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
-import ru.yandex.practicum.filmorate.storage.film.GenreDbStorage;
-import ru.yandex.practicum.filmorate.storage.film.MpaDbStorage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,8 +22,6 @@ import java.util.Comparator;
 @Slf4j
 public class FilmRowMapper implements RowMapper<Film> {
 
-    private final MpaDbStorage mpaDbStorage;
-    private final GenreDbStorage genreDbStorage;
     private final JdbcTemplate jdbcTemplate;
 
     @Override

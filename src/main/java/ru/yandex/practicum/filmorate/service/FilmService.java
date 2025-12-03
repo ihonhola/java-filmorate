@@ -10,6 +10,8 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.film.GenreDbStorage;
+import ru.yandex.practicum.filmorate.storage.film.MpaDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
@@ -24,19 +26,19 @@ public class FilmService {
 
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
-    private final MpaService mpaService;
-    private final GenreService genreService;
+    private final MpaDbStorage mpaDbStorage;
+    private final GenreDbStorage genreDbStorage;
     private final LocalDate cinemaBirthday = LocalDate.of(1895, 12, 28);
 
 
     @Autowired
     public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
                        @Qualifier("userDbStorage") UserStorage userStorage,
-                       MpaService mpaService, GenreService genreService) {
+                       MpaDbStorage mpaDbStorage, GenreDbStorage genreDbStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
-        this.mpaService = mpaService;
-        this.genreService = genreService;
+        this.mpaDbStorage = mpaDbStorage;
+        this.genreDbStorage = genreDbStorage;
     }
 
     public void addLike(Long filmId, Long userId) {
@@ -66,7 +68,6 @@ public class FilmService {
     public List<Film> getPopularFilms(int count) {
         List<Film> allFilms = new ArrayList<>(filmStorage.findAll());
 
-        // Логируем для отладки
         log.info("Все фильмы для популярности:");
         for (Film film : allFilms) {
             log.info("Фильм ID: {}, Название: {}, Лайков: {}",
@@ -152,12 +153,12 @@ public class FilmService {
         log.info("Все фильмы успешно удалены");
     }
 
-    public boolean existsById(Long id) {
+    private boolean existsById(Long id) {
         return filmStorage.existsById(id);
     }
 
     private void validateMpaExists(MpaRating mpa) {
-        mpaService.findById(mpa.getId());
+        mpaDbStorage.findById(mpa.getId());
     }
 
     private void validateGenreExists(Set<Genre> genres) {
@@ -167,7 +168,7 @@ public class FilmService {
 
         for (Genre genre : genres) {
             try {
-                genreService.findById(genre.getId());
+                genreDbStorage.findById(genre.getId());
                 } catch (NotFoundException e) {
                     throw new NotFoundException(("Жанр с id = " + genre.getId() + " не найден"));
             }

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.sql.ResultSet;
@@ -35,6 +36,9 @@ public class GenreDbStorage {
     public Optional<Genre> findById(Long id) {
         String sql = "SELECT * FROM genres WHERE genre_id = ?";
         List<Genre> genres = jdbcTemplate.query(sql, genreRowMapper, id);
-        return genres.isEmpty() ? Optional.empty() : Optional.of(genres.get(0));
+        if (genres.isEmpty()) {
+            throw new NotFoundException("Жанр с id = " + id + " не найден");
+        }
+        return Optional.of(genres.get(0));
     }
 }

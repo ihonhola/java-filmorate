@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 
 import java.sql.ResultSet;
@@ -36,7 +37,10 @@ public class MpaDbStorage {
     public Optional<MpaRating> findById(Long id) {
         String sql = "SELECT * FROM mpa_ratings WHERE mpa_id = ?";
         List<MpaRating> ratings = jdbcTemplate.query(sql, mpaRowMapper, id);
-        return ratings.isEmpty() ? Optional.empty() : Optional.of(ratings.get(0));
+        if (ratings.isEmpty()) {
+            throw new NotFoundException("MPA рейтинг с id = " + id + " не найден");
+        }
+        return Optional.of(ratings.get(0));
     }
 
     public Optional<MpaRating> findByName(String name) {

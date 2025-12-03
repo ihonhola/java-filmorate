@@ -69,7 +69,7 @@ public class UserDbStorage implements UserStorage {
                 user.getId());
 
         log.info("Пользователь обновлен в БД с ID: {}", user.getId());
-        return getById(user.getId());
+        return user;
     }
 
     @Override

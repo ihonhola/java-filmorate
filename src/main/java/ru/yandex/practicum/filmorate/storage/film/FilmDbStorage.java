@@ -54,19 +54,18 @@ public class FilmDbStorage implements FilmStorage {
         Long filmId = Objects.requireNonNull(keyHolder.getKey()).longValue();
         film.setId(filmId);
 
-        // Сохраняем MPA рейтинг (теперь передаем Long mpaId)
+        // Сохраняем MPA рейтинг
         if (film.getMpa() != null) {
             saveMpaRating(filmId, film.getMpa());
         }
 
-        // Сохраняем жанры (теперь передаем Set<Long> genreIds)
+        // Сохраняем жанры
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             saveGenres(filmId, film.getGenres());
         }
 
         log.info("Фильм создан в БД с ID: {}", filmId);
-        return getById(filmId);
-        //return film;
+        return film;
     }
 
     @Override
@@ -87,7 +86,7 @@ public class FilmDbStorage implements FilmStorage {
         updateGenres(film.getId(), film.getGenres());
 
         log.info("Фильм обновлен в БД с ID: {}", film.getId());
-        return getById(film.getId());
+        return film;
     }
 
     @Override
@@ -126,12 +125,9 @@ public class FilmDbStorage implements FilmStorage {
         log.info("Все фильмы удалены из БД");
     }
 
-
-
     private void saveMpaRating(Long filmId, Long mpaId) {
         if (mpaId == null) return;
 
-        // Теперь просто вставляем mpa_id напрямую
         String sql = "INSERT INTO film_mpa (film_id, mpa_id) VALUES (?, ?)";
         jdbcTemplate.update(sql, filmId, mpaId);
     }

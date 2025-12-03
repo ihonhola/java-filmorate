@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,7 +71,7 @@ public class UserService {
         return userStorage.getCommonFriends(userId, otherUserId);
     }
 
-    private User getUserById(Long userId) {
+    public User getUserById(Long userId) {
         User user = userStorage.getById(userId);
         if (user == null) {
             throw new NotFoundException("Пользователь с id = " + userId + " не найден");
@@ -83,6 +84,8 @@ public class UserService {
     }
 
     public User create(User user) {
+        validateUser(user);
+
         if (user.getName() == null || user.getName().isBlank()) {
             log.debug("Имя пользователя не указано, установлен логин: {}", user.getLogin());
             user.setName(user.getLogin());
@@ -91,6 +94,8 @@ public class UserService {
     }
 
     public User update(User user) {
+        validateUser(user);
+
         if (user.getId() == null) {
             throw new ValidationException("Id должен быть указан");
         }
@@ -108,10 +113,6 @@ public class UserService {
         return userStorage.update(user);
     }
 
-    public User getById(Long id) {
-        return getUserById(id);
-    }
-
     public void delete(Long id) {
         getUserById(id);
         userStorage.delete(id);
@@ -123,7 +124,33 @@ public class UserService {
         log.info("Все пользователи успешно удалены");
     }
 
-    public boolean existsById(Long id) {
+    private boolean existsById(Long id) {
         return userStorage.existsById(id);
+    }
+
+    private void validateUser(User user) {
+        if (user == null) {
+            String errorMessage = "Тело запроса не может быть пустым";
+            log.warn("Ошибка валидации: {}", errorMessage);
+            throw new ValidationException(errorMessage);
+        }
+
+        if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
+            String errorMessage = "Почта не может быть пустой и должна содержать символ @";
+            log.warn("Ошибка валидации при создании пользователя: {}", errorMessage);
+            throw new ValidationException(errorMessage);
+        }
+
+        if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
+            String errorMessage = "Логин не может быть пустым и содержать пробелы";
+            log.warn("Ошибка валидации при создании пользователя: {}", errorMessage);
+            throw new ValidationException(errorMessage);
+        }
+
+        if (user.getBirthday().isAfter(LocalDate.now())) {
+            String errorMessage = "Дата рождения не может быть в будущем";
+            log.warn("Ошибка валидации при создании пользователя: {}", errorMessage);
+            throw new ValidationException(errorMessage);
+        }
     }
 }

@@ -7,11 +7,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.dto.GenreResponse;
 import ru.yandex.practicum.filmorate.service.GenreService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/genres")
@@ -22,24 +20,16 @@ public class GenreController {
     private final GenreService genreService;
 
     @GetMapping
-    public List<GenreResponse> findAll() {
-        log.info("Получен запрос на получение всех жанров");
-        return genreService.findAll().stream()
-                .map(this::convertToResponse)
-                .collect(Collectors.toList());
+    public List<Genre> findAll() {
+        log.info("Получен запрос на получение всех MPA рейтингов");
+        List<Genre> genres = genreService.findAll();
+        log.info("Найдено {} MPA рейтингов", genres.size());
+        return genres;
     }
 
     @GetMapping("/{id}")
-    public GenreResponse findById(@PathVariable Long id) {
-        log.info("Получен запрос на получение жанра с ID: {}", id);
-        Genre genre = genreService.findById(id);
-        return convertToResponse(genre);
-    }
-
-    private GenreResponse convertToResponse(Genre genre) {
-        GenreResponse response = new GenreResponse();
-        response.setId(genre.getId());
-        response.setName(genre.getName());
-        return response;
+    public Genre findById(@PathVariable Long id) {
+        log.info("Получен запрос на получение MPA рейтинга с ID: {}", id);
+        return genreService.findById(id);
     }
 }

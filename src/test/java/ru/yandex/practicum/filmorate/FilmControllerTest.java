@@ -12,7 +12,9 @@ import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -29,7 +31,7 @@ public class FilmControllerTest {
         filmStorage = new InMemoryFilmStorage();
         userStorage = new InMemoryUserStorage();
         filmService = new FilmService(filmStorage, userStorage, null, null);
-        filmController = new FilmController(filmService, null);
+        filmController = new FilmController(filmService);
         validFilm = new Film();
         validFilm.setName("Valid Film");
         validFilm.setDescription("Valid description");
