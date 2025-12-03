@@ -11,9 +11,17 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.mappers.UserRowMapper;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.sql.*;
 import java.sql.Date;
-import java.util.*;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 @Repository
 @Qualifier("userDbStorage")
@@ -32,7 +40,11 @@ public class UserDbStorage implements UserStorage {
     @Override
     public Collection<User> findAll() {
         String sql = "SELECT * FROM users";
-        return jdbcTemplate.query(sql, userRowMapper);
+        List<User> users = jdbcTemplate.query(sql, userRowMapper);
+
+        // Загружаем друзей для всех пользователей
+        loadFriendsForUsers(users);
+        return users;
     }
 
     @Override
@@ -76,7 +88,17 @@ public class UserDbStorage implements UserStorage {
     public User getById(Long id) {
         String sql = "SELECT * FROM users WHERE user_id = ?";
         List<User> users = jdbcTemplate.query(sql, userRowMapper, id);
-        return users.isEmpty() ? null : users.get(0);
+
+        if (users.isEmpty()) {
+            return null;
+        }
+
+        User user = users.get(0);
+
+        // Загружаем друзей для этого пользователя
+        user.setFriends(loadFriends(user.getId()));
+
+        return user;
     }
 
     @Override
@@ -139,7 +161,12 @@ public class UserDbStorage implements UserStorage {
                 "JOIN friendships f ON u.user_id = f.friend_id " +
                 "WHERE f.user_id = ? AND f.status = 'CONFIRMED'";
 
-        return jdbcTemplate.query(sql, userRowMapper, userId);
+        List<User> friends = jdbcTemplate.query(sql, userRowMapper, userId);
+
+        // Загружаем друзей для каждого друга
+        loadFriendsForUsers(friends);
+
+        return friends;
     }
 
     @Override
@@ -150,12 +177,60 @@ public class UserDbStorage implements UserStorage {
                 "WHERE f1.user_id = ? AND f2.user_id = ? " +
                 "AND f1.status = 'CONFIRMED' AND f2.status = 'CONFIRMED'";
 
-        return jdbcTemplate.query(sql, userRowMapper, userId, otherUserId);
+        List<User> commonFriends = jdbcTemplate.query(sql, userRowMapper, userId, otherUserId);
+
+        // Загружаем друзей для общих друзей
+        loadFriendsForUsers(commonFriends);
+
+        return commonFriends;
     }
 
     private Set<Long> loadFriends(Long userId) {
         String sql = "SELECT friend_id FROM friendships WHERE user_id = ? AND status = 'CONFIRMED'";
-        return new HashSet<>(jdbcTemplate.query(sql,
-                (rs, rowNum) -> rs.getLong("friend_id"), userId));
+        List<Long> friendIds = jdbcTemplate.query(sql,
+                (rs, rowNum) -> rs.getLong("friend_id"),
+                userId);
+        return new HashSet<>(friendIds);
+    }
+
+    // Загружаем друзей для списка пользователей
+    private void loadFriendsForUsers(List<User> users) {
+        if (users == null || users.isEmpty()) {
+            return;
+        }
+
+        // Собираем все ID пользователей
+        Set<Long> userIds = new HashSet<>();
+        for (User user : users) {
+            userIds.add(user.getId());
+        }
+
+        // Загружаем все связи дружбы одним запросом
+        Map<Long, Set<Long>> allFriends = loadAllFriends(userIds);
+
+        // Устанавливаем друзей каждому пользователю
+        for (User user : users) {
+            user.setFriends(allFriends.getOrDefault(user.getId(), new HashSet<>()));
+        }
+    }
+
+    // Загружаем всех друзей для набора пользователей
+    private Map<Long, Set<Long>> loadAllFriends(Set<Long> userIds) {
+        if (userIds.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        String placeholders = String.join(",", Collections.nCopies(userIds.size(), "?"));
+        String sql = "SELECT user_id, friend_id FROM friendships WHERE user_id IN (" + placeholders + ") AND status = 'CONFIRMED'";
+
+        Map<Long, Set<Long>> friendsMap = new HashMap<>();
+
+        jdbcTemplate.query(sql, userIds.toArray(), rs -> {
+            Long userId = rs.getLong("user_id");
+            Long friendId = rs.getLong("friend_id");
+            friendsMap.computeIfAbsent(userId, k -> new HashSet<>()).add(friendId);
+        });
+
+        return friendsMap;
     }
 }
