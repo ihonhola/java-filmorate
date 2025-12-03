@@ -1,14 +1,20 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Component
+@Qualifier("inMemoryUserStorage")
 @Slf4j
 public class InMemoryUserStorage implements UserStorage {
     private final Map<Long, User> users = new HashMap<>();
@@ -89,5 +95,60 @@ public class InMemoryUserStorage implements UserStorage {
         long nextId = ++currentMaxId;
         log.debug("Сгенерирован новый ID: {}", nextId);
         return nextId;
+    }
+
+    @Override
+    public void addFriend(Long userId, Long friendId) {
+        User user = users.get(userId);
+        User friend = users.get(friendId);
+
+        if (user != null && friend != null) {
+            user.getFriends().add(friendId);
+            friend.getFriends().add(userId); // Для двусторонней дружбы
+            log.info("Пользователь {} добавил в друзья пользователя {}", userId, friendId);
+        }
+    }
+
+    @Override
+    public void removeFriend(Long userId, Long friendId) {
+        User user = users.get(userId);
+        User friend = users.get(friendId);
+
+        if (user != null) {
+            user.getFriends().remove(friendId);
+        }
+        if (friend != null) {
+            friend.getFriends().remove(userId);
+        }
+        log.info("Пользователь {} удалил из друзей пользователя {}", userId, friendId);
+    }
+
+    @Override
+    public List<User> getFriends(Long userId) {
+        User user = users.get(userId);
+        if (user == null) {
+            return Collections.emptyList();
+        }
+
+        return user.getFriends().stream()
+                .map(users::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<User> getCommonFriends(Long userId, Long otherUserId) {
+        User user = users.get(userId);
+        User otherUser = users.get(otherUserId);
+
+        if (user == null || otherUser == null) {
+            return Collections.emptyList();
+        }
+
+        return user.getFriends().stream()
+                .filter(friendId -> otherUser.getFriends().contains(friendId))
+                .map(users::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 }

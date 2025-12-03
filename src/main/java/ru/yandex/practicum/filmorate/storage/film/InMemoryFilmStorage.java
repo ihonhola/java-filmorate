@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 
@@ -9,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
+@Qualifier("inMemoryFilmStorage")
 @Slf4j
 public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Long, Film> films = new HashMap<>();
@@ -43,6 +45,21 @@ public class InMemoryFilmStorage implements FilmStorage {
         oldFilm.setDescription(film.getDescription());
         oldFilm.setReleaseDate(film.getReleaseDate());
         oldFilm.setDuration(film.getDuration());
+
+        // Обновляем лайки
+        if (film.getLikes() != null) {
+            oldFilm.setLikes(film.getLikes());
+        }
+
+        // Обновляем жанры
+        if (film.getGenres() != null) {
+            oldFilm.setGenres(film.getGenres());
+        }
+
+        // Обновляем MPA
+        if (film.getMpa() != null) {
+            oldFilm.setMpa(film.getMpa());
+        }
 
         log.info("Фильм с ID {} успешно обновлен. Новые данные: название: {}, дата релиза: {}, длительность: {}",
                 film.getId(), film.getName(), film.getReleaseDate(), film.getDuration());
@@ -81,5 +98,30 @@ public class InMemoryFilmStorage implements FilmStorage {
         long nextId = ++currentMaxId;
         log.debug("Сгенерирован новый ID: {}", nextId);
         return nextId;
+    }
+
+    @Override
+    public void addLike(Long filmId, Long userId) {
+        Film film = films.get(filmId);
+        if (film != null) {
+            film.getLikes().add(userId);
+            log.info("Лайк добавлен к фильму {} от пользователя {}", filmId, userId);
+        } else {
+            log.warn("Фильм с ID {} не найден для добавления лайка", filmId);
+        }
+    }
+
+    @Override
+    public void removeLike(Long filmId, Long userId) {
+        Film film = films.get(filmId);
+        if (film != null) {
+            if (film.getLikes().remove(userId)) {
+                log.info("Лайк удален с фильма {} от пользователя {}", filmId, userId);
+            } else {
+                log.warn("Лайк от пользователя {} не найден у фильма {}", userId, filmId);
+            }
+        } else {
+            log.warn("Фильм с ID {} не найден для удаления лайка", filmId);
+        }
     }
 }

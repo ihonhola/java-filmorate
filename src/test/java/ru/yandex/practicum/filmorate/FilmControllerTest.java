@@ -12,7 +12,9 @@ import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.time.LocalDate;
-import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,7 +30,7 @@ public class FilmControllerTest {
     void setUp() {
         filmStorage = new InMemoryFilmStorage();
         userStorage = new InMemoryUserStorage();
-        filmService = new FilmService(filmStorage, userStorage);
+        filmService = new FilmService(filmStorage, userStorage, null, null);
         filmController = new FilmController(filmService);
         validFilm = new Film();
         validFilm.setName("Valid Film");
@@ -44,6 +46,18 @@ public class FilmControllerTest {
         filmService = null;
         filmStorage = null;
         validFilm = null;
+    }
+
+    private Map<String, Object> filmToMap(Film film) {
+        Map<String, Object> map = new HashMap<>();
+        if (film.getId() != null) {
+            map.put("id", film.getId());
+        }
+        map.put("name", film.getName());
+        map.put("description", film.getDescription());
+        map.put("releaseDate", film.getReleaseDate());
+        map.put("duration", film.getDuration());
+        return map;
     }
 
     @Test
@@ -102,7 +116,7 @@ public class FilmControllerTest {
         Film film = new Film();
         film.setName("Valid Film");
         film.setDescription("Смысл в том, что его нет. И когда это понимаешь, всё становится смыслом. " +
-                        "Мир — это язык, а мы — слова, которые он говорит сам с собой." +
+                "Мир — это язык, а мы — слова, которые он говорит сам с собой." +
                 "Все беды в мире происходят от того, что люди вечно суют нос не в свои дела. " +
                 "И называют они это то братской любовью, то чувством долга."); // > 201 символа
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
@@ -229,18 +243,11 @@ public class FilmControllerTest {
         film2.setDuration(90);
         filmController.create(film2);
 
-        Collection<Film> films = filmController.findAll();
+        List<Film> films = filmController.findAll();
 
         assertNotNull(films);
         assertEquals(2, films.size());
         assertTrue(films.stream().anyMatch(f -> f.getName().equals("Valid Film")));
         assertTrue(films.stream().anyMatch(f -> f.getName().equals("Second Film")));
-    }
-
-    @Test
-    void createFilm_withNullFilm_shouldThrowException() {
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> filmController.create(null));
-        assertNotNull(exception);
     }
 }

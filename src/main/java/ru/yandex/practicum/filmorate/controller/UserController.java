@@ -3,11 +3,9 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
@@ -25,53 +23,25 @@ public class UserController {
 
     @GetMapping
     public Collection<User> findAll() {
+        log.info("Получен запрос на получение всех пользователей");
         return userService.findAll();
     }
 
     @GetMapping("/{id}")
     public User getById(@PathVariable Long id) {
-        return userService.getById(id);
+        log.info("Получен запрос на получение пользователя с ID: {}", id);
+        return userService.getUserById(id);
     }
 
     @PostMapping
     public User create(@RequestBody User user) {
         log.info("Получен запрос на создание нового пользователя: {}", user);
-
-        validateUser(user);
-
         return userService.create(user);
-    }
-
-    private void validateUser(User user) {
-        if (user == null) {
-            String errorMessage = "Тело запроса не может быть пустым";
-            log.warn("Ошибка валидации: {}", errorMessage);
-            throw new ValidationException(errorMessage);
-        }
-
-        if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
-            String errorMessage = "Почта не может быть пустой и должна содержать символ @";
-            log.warn("Ошибка валидации при создании пользователя: {}", errorMessage);
-            throw new ValidationException(errorMessage);
-        }
-
-        if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
-            String errorMessage = "Логин не может быть пустым и содержать пробелы";
-            log.warn("Ошибка валидации при создании пользователя: {}", errorMessage);
-            throw new ValidationException(errorMessage);
-        }
-
-        if (user.getBirthday().isAfter(LocalDate.now())) {
-            String errorMessage = "Дата рождения не может быть в будущем";
-            log.warn("Ошибка валидации при создании пользователя: {}", errorMessage);
-            throw new ValidationException(errorMessage);
-        }
     }
 
     @PutMapping
     public User update(@RequestBody User newUser) {
         log.info("Получен запрос на обновление пользователя: {}", newUser);
-        validateUser(newUser);
         return userService.update(newUser);
     }
 

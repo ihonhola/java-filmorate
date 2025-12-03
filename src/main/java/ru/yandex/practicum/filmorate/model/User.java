@@ -17,7 +17,7 @@ public class User {
     @NotBlank(message = "Email не может быть пустым")
     @NotNull(message = "Email не может быть пустым")
     @Email(message = "Email должен быть корректным адресом электронной почты")
-    private String email; //оставил ошибки в контроллерах, чтобы пройти тесты в Postman
+    private String email;
 
     @NotBlank(message = "Логин не может быть пустым")
     @NotNull (message = "Email не может быть пустым")
